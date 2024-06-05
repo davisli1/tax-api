@@ -21,19 +21,31 @@ provincial_tax_data = {
 def calculate_tax(income, brackets, rates):
     tax = 0
     remaining_income = income
-
+    
     for i in range(len(brackets)):
-        bracket_limit = brackets[i]
-        rate = rates[i]
-
-        if remaining_income > bracket_limit:
-            tax += (bracket_limit - (brackets[i-1] if i > 0 else 0)) * rate
-            remaining_income -= (bracket_limit - (brackets[i-1] if i > 0 else 0))
+        if i == 0:
+            # First bracket calculation
+            if remaining_income > brackets[i]:
+                tax += brackets[i] * rates[i]
+                remaining_income -= brackets[i]
+            else:
+                tax += remaining_income * rates[i]
+                remaining_income = 0
+                break
         else:
-            tax += remaining_income * rate
-            remaining_income = 0
-            break
+            # Subsequent bracket calculations
+            if remaining_income > (brackets[i] - brackets[i-1]):
+                tax += (brackets[i] - brackets[i-1]) * rates[i]
+                remaining_income -= (brackets[i] - brackets[i-1])
+            else:
+                tax += remaining_income * rates[i]
+                remaining_income = 0
+                break
 
+    # If income exceeds the highest bracket
+    if remaining_income > 0:
+        tax += remaining_income * rates[-1]
+        
     return tax
 
 @app.route('/calculate-tax', methods=['GET'])
